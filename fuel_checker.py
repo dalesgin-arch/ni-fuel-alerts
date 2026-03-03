@@ -14,6 +14,10 @@ HISTORY_FILE = "fuel_history.json"
 PUSHOVER_KEY = os.getenv("PUSHOVER_KEY")
 PUSHOVER_USER_KEY = os.getenv("PUSHOVER_USER_KEY")
 
+print("Key loaded:", PUSHOVER_KEY is not None)
+print("User loaded:", PUSHOVER_USER_KEY is not None)
+
+
 # -----------------------------
 # Fetch fuel price
 # -----------------------------
