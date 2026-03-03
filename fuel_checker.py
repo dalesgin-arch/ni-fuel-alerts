@@ -119,10 +119,10 @@ stations = data.get("stations", [])
 fuels = ["diesel", "petrol", "super"]
 alerts = []
 
-    for fuel in fuels:
-        cheapest = find_cheapest(stations, fuel)
-        if not cheapest:
-            continue
+for fuel in fuels:
+    cheapest = find_cheapest(stations, fuel)
+    if not cheapest:
+        continue
 
         new_price = cheapest["price"]
         station = cheapest["station"]
