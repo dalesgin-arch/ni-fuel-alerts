@@ -136,4 +136,5 @@ def send_pushover(message):
         "user": PUSHOVER_USER_KEY,
         "message": message,
         "title": "Fuel Price Alert",
-        "priority
+        "priority": 0
+    }
