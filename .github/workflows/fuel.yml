@@ -26,10 +26,25 @@ jobs:
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: python fuel_checker.py
 
+      # Ensure the history file exists so git add never fails
+      - name: Ensure history file exists
+        run: |
+          if [ ! -f fuel_history.json ]; then
+            echo "[]" > fuel_history.json
+          fi
+
+      # Commit only if the file actually changed
       - name: Commit updated history
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+
           git add fuel_history.json
-          git commit -m "Update fuel history" || echo "No changes"
-          git push
+
+          # Only commit if there are changes
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update fuel history"
+            git push
+          fi
