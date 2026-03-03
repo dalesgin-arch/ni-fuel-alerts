@@ -1,4 +1,4 @@
-name: Fuel Checker
+name: fuel
 
 on:
   schedule:
