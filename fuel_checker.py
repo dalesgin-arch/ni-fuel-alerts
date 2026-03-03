@@ -36,14 +36,35 @@ def get_arrow(old, new):
         return "➡️"
 
 def format_station(station):
+    brand = station.get("brand", "")
     name = station.get("name", "Unknown station")
     address = station.get("address", "")
     postcode = station.get("postcode", "")
-    return f"{name}, {address}, {postcode}".strip(", ")
+
+    # Include brand in the formatted output
+    if brand:
+        return f"{brand} {name}, {address}, {postcode}".strip(", ")
+    else:
+        return f"{name}, {address}, {postcode}".strip(", ")
+
+def should_ignore_station(station):
+    brand = station.get("brand", "").lower()
+    postcode = station.get("postcode", "").upper()
+
+    # Ignore Sainsbury's Carrickfergus (postcode BT38)
+    if "sainsbury" in brand and postcode.startswith("BT38"):
+        return True
+
+    return False
 
 def find_cheapest(stations, fuel_type):
     cheapest = None
     for s in stations:
+
+        # Skip Sainsbury's Carrickfergus
+        if should_ignore_station(s):
+            continue
+
         prices = s.get("prices", {})
         if fuel_type not in prices:
             continue
