@@ -100,29 +100,29 @@ def send_pushover(message, token, user):
 def main():
     history = load_history()
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (compatible; FuelChecker/1.0; +https://github.com)"
-}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; FuelChecker/1.0; +https://github.com)"
+    }
 
-response = requests.get(API_URL, headers=headers)
+    response = requests.get(API_URL, headers=headers)
 
-try:
-    data = response.json()
-except ValueError:
-    print("ERROR: API did not return JSON")
-    print("Status:", response.status_code)
-    print("Body:", response.text[:200])
-    return
+    try:
+        data = response.json()
+    except ValueError:
+        print("ERROR: API did not return JSON")
+        print("Status:", response.status_code)
+        print("Body:", response.text[:200])
+        return
 
-stations = data.get("stations", [])
+    stations = data.get("stations", [])
 
-fuels = ["diesel", "petrol", "super"]
-alerts = []
+    fuels = ["diesel", "petrol", "super"]
+    alerts = []
 
-for fuel in fuels:
-    cheapest = find_cheapest(stations, fuel)
-    if not cheapest:
-        continue
+    for fuel in fuels:
+        cheapest = find_cheapest(stations, fuel)
+        if not cheapest:
+            continue
 
         new_price = cheapest["price"]
         station = cheapest["station"]
