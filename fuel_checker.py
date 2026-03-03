@@ -11,8 +11,8 @@ API_URL = "https://www.fuel-finder.service.gov.uk/api/v1/pfs/fuel-prices?batch-n
 FUEL_TYPE = "diesel"                # or "petrol"
 HISTORY_FILE = "fuel_history.json"
 
-PUSHOVER_TOKEN = os.getenv("a3f4951ecyszhfh81w4wmd9cott5hg")
-PUSHOVER_USER = os.getenv("uw8ivdux94t27c1bowuro8hr4ueiny")
+PUSHOVER_KEY = os.getenv("a3f4951ecyszhfh81w4wmd9cott5hg")
+PUSHOVER_USER_KEY = os.getenv("uw8ivdux94t27c1bowuro8hr4ueiny")
 
 # -----------------------------
 # Fetch fuel price
@@ -46,13 +46,13 @@ def save_history(history):
 # Send Pushover alert
 # -----------------------------
 def send_pushover(message):
-    if not PUSHOVER_TOKEN or not PUSHOVER_USER:
+    if not PUSHOVER_KEY or not PUSHOVER_USER_KEY:
         print("Pushover not configured.")
         return
 
     payload = {
-        "token": PUSHOVER_TOKEN,
-        "user": PUSHOVER_USER,
+        "token": PUSHOVER_KEY,
+        "user": PUSHOVER_USER_KEY,
         "message": message,
         "title": "Fuel Price Alert",
         "priority": 0
