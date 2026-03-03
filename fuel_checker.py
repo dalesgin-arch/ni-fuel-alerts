@@ -54,6 +54,53 @@ def fetch_price():
 
     return sum(prices) / len(prices)
 
+def fetch_cheapest_prices():
+    token = get_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    r = requests.get(API_URL, headers=headers, timeout=10)
+    r.raise_for_status()
+    data = r.json()
+
+    # Track cheapest prices
+    cheapest = {
+        "diesel": None,
+        "petrol": None,
+        "superunleaded": None
+    }
+
+    for station in data.get("stations", []):
+        addr = station.get("address", {})
+        postcode = addr.get("postcode", "")
+
+        # Northern Ireland only
+        if not postcode.startswith("BT"):
+            continue
+
+        lat = station.get("latitude")
+        lon = station.get("longitude")
+        if lat is None or lon is None:
+            continue
+
+        # Distance filter
+        dist = haversine(CARRICK_LAT, CARRICK_LON, lat, lon)
+        if dist > MAX_DISTANCE_MILES:
+            continue
+
+        # Extract fuel prices
+        for fuel in station.get("fuels", []):
+            ftype = fuel.get("type", "").lower()
+            price = fuel.get("price")
+
+            if price is None:
+                continue
+
+            if ftype in cheapest:
+                price = float(price)
+                if cheapest[ftype] is None or price < cheapest[ftype]:
+                    cheapest[ftype] = price
+
+    return cheapest
 
 # -----------------------------
 # Load history
