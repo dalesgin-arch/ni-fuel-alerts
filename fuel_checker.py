@@ -7,6 +7,8 @@ import os
 HOME_LAT = 54.715
 HOME_LON = -5.805
 
+API_URL = "https://www.fuel-finder.service.gov.uk/api/v1/pfs/fuel-prices?batch-number=1"
+
 def haversine(lat1, lon1, lat2, lon2):
     R = 3958.8  # miles
     dlat = math.radians(lat2 - lat1)
@@ -34,7 +36,7 @@ def get_arrow(old, new):
         return "➡️"
 
 def format_station(station):
-    name = station.get("station_name", "Unknown station")
+    name = station.get("name", "Unknown station")
     address = station.get("address", "")
     postcode = station.get("postcode", "")
     return f"{name}, {address}, {postcode}".strip(", ")
@@ -42,17 +44,24 @@ def format_station(station):
 def find_cheapest(stations, fuel_type):
     cheapest = None
     for s in stations:
-        if fuel_type not in s["prices"]:
+        prices = s.get("prices", {})
+        if fuel_type not in prices:
             continue
-        price = s["prices"][fuel_type]
-        dist = haversine(HOME_LAT, HOME_LON, s["latitude"], s["longitude"])
-        if dist <= 8:  # within 8 miles
+
+        price = prices[fuel_type]
+        lat = s["location"]["latitude"]
+        lon = s["location"]["longitude"]
+
+        dist = haversine(HOME_LAT, HOME_LON, lat, lon)
+
+        if dist <= 8:
             if cheapest is None or price < cheapest["price"]:
                 cheapest = {
                     "price": price,
                     "station": s,
                     "distance": round(dist, 1)
                 }
+
     return cheapest
 
 def send_pushover(message, token, user):
@@ -68,12 +77,10 @@ def send_pushover(message, token, user):
     )
 
 def main():
-    # Load previous prices
     history = load_history()
 
-    # Fetch latest data
-    response = requests.get("YOUR_FUEL_API_URL_HERE")
-    stations = response.json()["stations"]
+    response = requests.get(API_URL)
+    stations = response.json().get("stations", [])
 
     fuels = ["diesel", "petrol", "super"]
     alerts = []
@@ -89,4 +96,24 @@ def main():
         station_text = format_station(station)
 
         old_price = history.get(fuel, new_price)
-        arrow = get_arrow(old_price
+        arrow = get_arrow(old_price, new_price)
+
+        if new_price != old_price:
+            alerts.append(
+                f"{arrow} {fuel.capitalize()} now {new_price:.1f}p at {station_text} ({distance} miles away)"
+            )
+
+        history[fuel] = new_price
+
+    save_history(history)
+
+    if alerts:
+        message = "\n".join(alerts)
+        send_pushover(
+            message,
+            os.getenv("PUSHOVER_KEY"),
+            os.getenv("PUSHOVER_USER_KEY")
+        )
+
+if __name__ == "__main__":
+    main()
