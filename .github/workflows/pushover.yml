@@ -1,0 +1,7 @@
+- name: Test Pushover 
+run: | 
+curl -s \ 
+-F "token=${{ secrets.PUSHOVER_KEY }}" \ 
+-F "user=${{ secrets.PUSHOVER_USER_KEY }}" \ 
+-F "message=Test from GitHub Actions" \ 
+https://api.pushover.net/1/messages.json
