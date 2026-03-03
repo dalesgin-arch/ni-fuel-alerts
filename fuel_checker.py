@@ -6,12 +6,13 @@ import os
 # -----------------------------
 # CONFIG
 # -----------------------------
-API_URL = "https://www.consumercouncil.org.uk/fuel-price-checker"   # I will fill this once you choose the source
+# API_URL = "https://www.consumercouncil.org.uk/fuel-price-checker"   # I will fill this once you choose the source
+API_URL = "https://www.fuel-finder.service.gov.uk/api/v1/pfs/fuel-prices?batch-number=1"
 FUEL_TYPE = "diesel"                # or "petrol"
 HISTORY_FILE = "fuel_history.json"
 
-PUSHOVER_TOKEN = os.getenv("PUSHOVER_TOKEN")
-PUSHOVER_USER = os.getenv("PUSHOVER_USER")
+PUSHOVER_TOKEN = os.getenv("a3f4951ecyszhfh81w4wmd9cott5hg")
+PUSHOVER_USER = os.getenv("uw8ivdux94t27c1bowuro8hr4ueiny")
 
 # -----------------------------
 # Fetch fuel price
