@@ -100,8 +100,21 @@ def send_pushover(message, token, user):
 def main():
     history = load_history()
 
-    response = requests.get(API_URL)
-    stations = response.json().get("stations", [])
+  headers = {
+    "User-Agent": "Mozilla/5.0 (compatible; FuelChecker/1.0; +https://github.com)"
+}
+
+response = requests.get(API_URL, headers=headers)
+
+try:
+    data = response.json()
+except ValueError:
+    print("ERROR: API did not return JSON")
+    print("Status:", response.status_code)
+    print("Body:", response.text[:200])
+    return
+
+stations = data.get("stations", [])
 
     fuels = ["diesel", "petrol", "super"]
     alerts = []
