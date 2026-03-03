@@ -11,8 +11,8 @@ API_URL = "https://www.fuel-finder.service.gov.uk/api/v1/pfs/fuel-prices?batch-n
 FUEL_TYPE = "diesel"                # or "petrol"
 HISTORY_FILE = "fuel_history.json"
 
-PUSHOVER_KEY = os.getenv("a3f4951ecyszhfh81w4wmd9cott5hg")
-PUSHOVER_USER_KEY = os.getenv("uw8ivdux94t27c1bowuro8hr4ueiny")
+PUSHOVER_KEY = os.getenv("PUSHOVER_KEY")
+PUSHOVER_USER_KEY = os.getenv("PUSHOVER_USER_KEY")
 
 # -----------------------------
 # Fetch fuel price
