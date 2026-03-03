@@ -22,6 +22,8 @@ jobs:
         env:
           PUSHOVER_KEY: ${{ secrets.PUSHOVER_KEY }}
           PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: python fuel_checker.py
 
       - name: Commit updated history
