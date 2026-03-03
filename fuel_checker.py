@@ -100,7 +100,7 @@ def send_pushover(message, token, user):
 def main():
     history = load_history()
 
-  headers = {
+headers = {
     "User-Agent": "Mozilla/5.0 (compatible; FuelChecker/1.0; +https://github.com)"
 }
 
