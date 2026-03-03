@@ -21,14 +21,39 @@ print("User loaded:", PUSHOVER_USER_KEY is not None)
 # -----------------------------
 # Fetch fuel price
 # -----------------------------
+def get_token():
+    token_url = "https://www.fuel-finder.service.gov.uk/oauth/token"
+    payload = {
+        "grant_type": "client_credentials",
+        "client_id": os.getenv("CLIENT_ID"),
+        "client_secret": os.getenv("CLIENT_SECRET")
+    }
+    r = requests.post(token_url, data=payload)
+    r.raise_for_status()
+    return r.json()["access_token"]
+)
+
 def fetch_price():
-    r = requests.get(API_URL, timeout=10)
+    token = get_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    r = requests.get(API_URL, headers=headers, timeout=10)
     r.raise_for_status()
     data = r.json()
 
-    # Adjust this depending on the API structure
-    price = data[FUEL_TYPE]["price"]
-    return float(price)
+    # Extract the average diesel price across all stations
+    prices = []
+
+    for station in data.get("stations", []):
+        for fuel in station.get("fuels", []):
+            if fuel.get("type") == FUEL_TYPE:
+                prices.append(float(fuel.get("price")))
+
+    if not prices:
+        raise ValueError("No prices found for fuel type: " + FUEL_TYPE)
+
+    return sum(prices) / len(prices)
+
 
 # -----------------------------
 # Load history
