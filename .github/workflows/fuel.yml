@@ -20,8 +20,8 @@ jobs:
 
       - name: Run fuel checker
         env:
-          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
-          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+          PUSHOVER_KEY: ${{ secrets.PUSHOVER_KEY }}
+          PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}
         run: python fuel_checker.py
 
       - name: Commit updated history
