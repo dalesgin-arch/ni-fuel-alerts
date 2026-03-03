@@ -116,8 +116,8 @@ except ValueError:
 
 stations = data.get("stations", [])
 
-    fuels = ["diesel", "petrol", "super"]
-    alerts = []
+fuels = ["diesel", "petrol", "super"]
+alerts = []
 
     for fuel in fuels:
         cheapest = find_cheapest(stations, fuel)
