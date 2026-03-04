@@ -145,8 +145,8 @@ def main():
         arrow = get_arrow(old_price, new_price)
 
         if new_price != old_price:
-                  trimmed = trim_station(station, fuel, distance) 
-                    alerts.append( 
+            trimmed = trim_station(station, fuel, distance) 
+                alerts.append( 
                         f"{fuel.capitalize()}: {new_price:.1f}p at {station_text} ({distance} miles)\n" 
                         f"{json.dumps(trimmed, indent=2)}" 
                     ) # Still update history so change alerts work in future if you want them history[fuel] = new_price
