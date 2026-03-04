@@ -131,7 +131,7 @@ def main():
     fuels = ["diesel", "petrol", "super"]
     alerts = []
 
-       for fuel in fuels:
+    for fuel in fuels:
         cheapest = find_cheapest(stations, fuel)
         if not cheapest:
             continue
