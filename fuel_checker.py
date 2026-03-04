@@ -163,6 +163,8 @@ def main():
             os.getenv("PUSHOVER_KEY"),
             os.getenv("PUSHOVER_USER_KEY")
         )
+        
+    if not alerts: alerts.append("No price changes today.")
 
 if __name__ == "__main__":
     main()
