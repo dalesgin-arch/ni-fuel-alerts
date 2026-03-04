@@ -163,6 +163,9 @@ def main():
     # Send the summary
     if alerts:
         message = "\n\n".join(alerts)
+        print("DEBUG TOKEN:", os.getenv("PUSHOVER_KEY")) 
+        print("DEBUG USER:", os.getenv("PUSHOVER_USER_KEY")) 
+        print("DEBUG ALERTS:", alerts)
         send_pushover(
             message,
             os.getenv("PUSHOVER_KEY"),
