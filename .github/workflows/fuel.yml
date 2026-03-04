@@ -1,6 +1,6 @@
-on:
-  schedule:
-    - cron: "0 */6 * * *"   # every 6 hours
+on: 
+  schedule: 
+    - cron: "30 8 * * *" # 08:30 every day (UTC) workflow_dispatch:
   workflow_dispatch:
 
 jobs:
