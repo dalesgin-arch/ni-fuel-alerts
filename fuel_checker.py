@@ -161,12 +161,14 @@ def main():
         alerts.append("No price changes today.")
 
     # Send the summary
-    message = "\n\n".join(alerts)
-    send_pushover(
-        message,
-        os.getenv("PUSHOVER_KEY")
-        os.getenv("PUSHOVER_USER_KEY")
-    )
+    if alerts:
+        message = "\n\n".join(alerts)
+        send_pushover(
+            message,
+            os.getenv("PUSHOVER_KEY"),
+            os.getenv("PUSHOVER_USER_KEY")
+        )
+
 
 if __name__ == "__main__":
     main()
