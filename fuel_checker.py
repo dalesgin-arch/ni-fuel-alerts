@@ -164,8 +164,8 @@ def main():
     message = "\n\n".join(alerts)
     send_pushover(
         message,
-        os.getenv${{ secrets.PUSHOVER_KEY }}
-        os.getenv${{ secrets.PUSHOVER_USER_KEY }}
+        os.getenv("PUSHOVER_KEY")
+        os.getenv("PUSHOVER_USER_KEY")
     )
 
 if __name__ == "__main__":
