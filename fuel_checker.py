@@ -156,15 +156,19 @@ history[fuel] = new_price
 
 save_history(history)
 
-    if alerts:
-        message = "\n".join(alerts)
-        send_pushover(
-            message,
-            os.getenv("PUSHOVER_KEY"),
-            os.getenv("PUSHOVER_USER_KEY")
-        )
-        
-    if not alerts: alerts.append("No price changes today.")
+# If no alerts, add a summary line
+if not alerts:
+    alerts.append("No price changes today.")
+
+if alerts:
+    message = "\n".join(alerts)
+    send_pushover(
+        message,
+        os.getenv("PUSHOVER_KEY"),
+        os.getenv("PUSHOVER_USER_KEY")
+    )
+      
+if not alerts: alerts.append("No price changes today.")
 
 if __name__ == "__main__":
     main()
