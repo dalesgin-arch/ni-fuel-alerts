@@ -35,6 +35,18 @@ def get_arrow(old, new):
     else:
         return "➡️"
 
+def trim_station(station, fuel, distance):
+    return {
+        "brand": station.get("brand"),
+        "name": station.get("name"),
+        "postcode": station.get("postcode"),
+        "distance_miles": distance,
+        "price": station.get("prices", {}).get(fuel),
+        "lat": station.get("location", {}).get("latitude"),
+        "lon": station.get("location", {}).get("longitude"),
+    }
+
+
 def format_station(station):
     brand = station.get("brand", "")
     name = station.get("name", "Unknown station")
@@ -132,10 +144,7 @@ def main():
         old_price = history.get(fuel, new_price)
         arrow = get_arrow(old_price, new_price)
 
-        if new_price != old_price:
-            alerts.append(
-                f"{arrow} {fuel.capitalize()} now {new_price:.1f}p at {station_text} ({distance} miles away)"
-            )
+        if new_price != old_price: trimmed = trim_station(station, fuel, distance) alerts.append( f"{arrow} {fuel.capitalize()} now {new_price:.1f}p at {station_text} ({distance} miles away)\n" f"{json.dumps(trimmed, indent=2)}" )
 
         history[fuel] = new_price
 
@@ -151,3 +160,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
