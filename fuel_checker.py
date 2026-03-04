@@ -154,8 +154,7 @@ if new_price != old_price:
 # Still update history so change alerts work in future if you want them
 history[fuel] = new_price
 
-
-    save_history(history)
+save_history(history)
 
     if alerts:
         message = "\n".join(alerts)
