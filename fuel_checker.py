@@ -144,7 +144,7 @@ def main():
         old_price = history.get(fuel, new_price)
         arrow = get_arrow(old_price, new_price)
 
-        if new_price != old_price:
+    if new_price != old_price:
             trimmed = trim_station(station, fuel, distance) 
                 alerts.append( 
                         f"{fuel.capitalize()}: {new_price:.1f}p at {station_text} ({distance} miles)\n" 
