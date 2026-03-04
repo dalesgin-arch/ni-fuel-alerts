@@ -131,7 +131,7 @@ def main():
     fuels = ["diesel", "petrol", "super"]
     alerts = []
 
-    for fuel in fuels:
+       for fuel in fuels:
         cheapest = find_cheapest(stations, fuel)
         if not cheapest:
             continue
@@ -144,32 +144,29 @@ def main():
         old_price = history.get(fuel, new_price)
         arrow = get_arrow(old_price, new_price)
 
-if new_price != old_price:
-    trimmed = trim_station(station, fuel, distance)
-    alerts.append(
-        f"{fuel.capitalize()}: {new_price:.1f}p at {station_text} ({distance} miles)\n"
-        f"{json.dumps(trimmed, indent=2)}"
-    )
+        # DAILY SUMMARY VERSION — always include each fuel
+        trimmed = trim_station(station, fuel, distance)
+        alerts.append(
+            f"{fuel.capitalize()}: {new_price:.1f}p at {station_text} ({distance} miles)\n"
+            f"{json.dumps(trimmed, indent=2)}"
+        )
 
-# Still update history so change alerts work in future if you want them
-history[fuel] = new_price
+        # Always update history
+        history[fuel] = new_price
 
-save_history(history)
+    save_history(history)
 
-# If no alerts, add a summary line
-if not alerts:
-    alerts.append("No price changes today.")
+    # If no alerts (unlikely with daily summary), add a fallback
+    if not alerts:
+        alerts.append("No price changes today.")
 
-if alerts:
-    message = "\n".join(alerts)
+    # Send the summary
+    message = "\n\n".join(alerts)
     send_pushover(
         message,
         os.getenv("PUSHOVER_KEY"),
         os.getenv("PUSHOVER_USER_KEY")
     )
-      
-if not alerts: alerts.append("No price changes today.")
 
 if __name__ == "__main__":
     main()
-
