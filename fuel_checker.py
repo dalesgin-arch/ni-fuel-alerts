@@ -8,8 +8,7 @@ import os
 HOME_LAT = 54.715
 HOME_LON = -5.805
 
-API_URL = "https://www.fuel-finder.service.gov.uk/api/v1/pfs/fuel-prices?batch-number=1"
-
+API_URL = "https://www.fuelprices.gov.uk/api/feeds/latest"
 
 def haversine(lat1, lon1, lat2, lon2):
     R = 3958.8  # miles
