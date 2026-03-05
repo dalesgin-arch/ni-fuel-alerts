@@ -10,6 +10,7 @@ HOME_LON = -5.805
 
 API_URL = "https://www.fuel-finder.service.gov.uk/api/v1/pfs/fuel-prices?batch-number=1"
 
+
 def haversine(lat1, lon1, lat2, lon2):
     R = 3958.8  # miles
     dlat = math.radians(lat2 - lat1)
@@ -18,15 +19,18 @@ def haversine(lat1, lon1, lat2, lon2):
         math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
     return 2 * R * math.asin(math.sqrt(a))
 
+
 def load_history():
     if not os.path.exists("fuel_history.json"):
         return {}
     with open("fuel_history.json", "r") as f:
         return json.load(f)
 
+
 def save_history(history):
     with open("fuel_history.json", "w") as f:
         json.dump(history, f, indent=2)
+
 
 def get_arrow(old, new):
     if new < old:
@@ -35,6 +39,7 @@ def get_arrow(old, new):
         return "⬆️"
     else:
         return "➡️"
+
 
 def trim_station(station, fuel, distance):
     return {
@@ -54,27 +59,26 @@ def format_station(station):
     address = station.get("address", "")
     postcode = station.get("postcode", "")
 
-    # Include brand in the formatted output
     if brand:
         return f"{brand} {name}, {address}, {postcode}".strip(", ")
     else:
         return f"{name}, {address}, {postcode}".strip(", ")
 
+
 def should_ignore_station(station):
     brand = station.get("brand", "").lower()
     postcode = station.get("postcode", "").upper()
 
-    # Ignore Sainsbury's Carrickfergus (postcode BT38)
     if "sainsbury" in brand and postcode.startswith("BT38"):
         return True
 
     return False
 
+
 def find_cheapest(stations, fuel_type):
     cheapest = None
-    for s in stations:
 
-        # Skip Sainsbury's Carrickfergus
+    for s in stations:
         if should_ignore_station(s):
             continue
 
@@ -83,6 +87,7 @@ def find_cheapest(stations, fuel_type):
             continue
 
         price = prices[fuel_type]
+
         loc = s.get("location", {})
         lat = loc.get("latitude")
         lon = loc.get("longitude")
@@ -93,7 +98,7 @@ def find_cheapest(stations, fuel_type):
         dist = haversine(HOME_LAT, HOME_LON, lat, lon)
 
         if dist <= 8:
-         if cheapest is None or price < cheapest["price"]:
+            if cheapest is None or price < cheapest["price"]:
                 cheapest = {
                     "price": price,
                     "station": s,
@@ -101,6 +106,7 @@ def find_cheapest(stations, fuel_type):
                 }
 
     return cheapest
+
 
 def send_pushover(message, token, user):
     requests.post(
@@ -114,9 +120,11 @@ def send_pushover(message, token, user):
         }
     )
 
+
 def main():
     history = load_history()
 
+    # FULL browser headers (required to avoid 403)
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "Accept": "application/json, text/plain, */*",
@@ -124,8 +132,7 @@ def main():
         "Referer": "https://www.fuel-finder.service.gov.uk/",
         "Origin": "https://www.fuel-finder.service.gov.uk",
         "Connection": "keep-alive"
-        }
-
+    }
 
     response = requests.get(API_URL, headers=headers)
 
@@ -134,8 +141,9 @@ def main():
     except ValueError:
         print("ERROR: API did not return JSON")
         print("Status:", response.status_code)
-        print("Body:", response.text[:200])
-        return
+        print("Headers:", response.headers)
+        print("Body:", response.text[:500])
+        raise SystemExit(1)
 
     stations = data.get("stations", [])
 
@@ -155,33 +163,24 @@ def main():
         old_price = history.get(fuel, new_price)
         arrow = get_arrow(old_price, new_price)
 
-        # DAILY SUMMARY VERSION — always include each fuel
         trimmed = trim_station(station, fuel, distance)
         alerts.append(
             f"{fuel.capitalize()}: {new_price:.1f}p at {station_text} ({distance} miles)\n"
             f"{json.dumps(trimmed, indent=2)}"
         )
 
-        # Always update history
         history[fuel] = new_price
 
     save_history(history)
 
-    # If no alerts (unlikely with daily summary), add a fallback
     if not alerts:
         alerts.append("No price changes today.")
 
-    # Send the summary
-    if alerts:
-        message = "\n\n".join(alerts)
-        print("DEBUG TOKEN:", os.getenv("PUSHOVER_KEY")) 
-        print("DEBUG USER:", os.getenv("PUSHOVER_USER_KEY")) 
-        print("DEBUG ALERTS:", alerts)
-        send_pushover(
-            message,
-            os.getenv("PUSHOVER_KEY"),
-            os.getenv("PUSHOVER_USER_KEY")
-        )
+    message = "\n\n".join(alerts)
+    print("DEBUG TOKEN:", os.getenv("PUSHOVER_KEY"))
+    print("DEBUG USER:", os.getenv("PUSHOVER_USER_KEY")
+    )
+
 
 if __name__ == "__main__":
     try:
