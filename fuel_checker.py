@@ -117,8 +117,16 @@ def send_pushover(message, token, user):
 def main():
     history = load_history()
 
+def main():
+    history = load_history()
+
     headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; FuelChecker/1.0; +https://github.com)"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-GB,en;q=0.9",
+        "Referer": "https://www.fuel-finder.service.gov.uk/",
+        "Origin": "https://www.fuel-finder.service.gov.uk",
+        "Connection": "keep-alive"
     }
 
     response = requests.get(API_URL, headers=headers)
@@ -128,6 +136,7 @@ def main():
     except ValueError:
         print("ERROR: API did not return JSON")
         print("Status:", response.status_code)
+        print("Headers:", response.headers)
         print("Body:", response.text[:200])
         return
 
