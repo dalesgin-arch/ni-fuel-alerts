@@ -83,8 +83,12 @@ def find_cheapest(stations, fuel_type):
             continue
 
         price = prices[fuel_type]
-        lat = s["location"]["latitude"]
-        lon = s["location"]["longitude"]
+        loc = s.get("location", {})
+        lat = loc.get("latitude")
+        lon = loc.get("longitude")
+
+if lat is None or lon is None:
+    continue
 
         dist = haversine(HOME_LAT, HOME_LON, lat, lon)
 
