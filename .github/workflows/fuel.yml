@@ -26,6 +26,14 @@ jobs:
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: python fuel_checker.py
 
+      - name: Test Pushover
+        run: |
+          curl -s \
+            -F "token=${{ secrets.PUSHOVER_KEY }}" \
+            -F "user=${{ secrets.PUSHOVER_USER_KEY }}" \
+            -F "message=Test from Fuel.yml Actions" \
+            https://api.pushover.net/1/messages.json
+
       # Ensure the history file exists so git add never fails
       - name: Ensure history file exists
         run: |
