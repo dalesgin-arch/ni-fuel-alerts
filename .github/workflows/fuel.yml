@@ -24,8 +24,10 @@ jobs:
           PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-        run: python fuel_checker.py
-          
+        run: |
+          python fuel_checker.py
+          echo "--- Python exit code: $?"
+             
       - name: Test Pushover
         run: |
           curl -s \
