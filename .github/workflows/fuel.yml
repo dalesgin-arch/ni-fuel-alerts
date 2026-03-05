@@ -27,7 +27,14 @@ jobs:
         run: |
           python fuel_checker.py
           echo "--- Python exit code: $?"
-             
+
+      - name: Debug file output
+        run: |
+          echo "Listing files:"
+          ls -l
+          echo "fuel_history.json content:"
+          cat fuel_history.json || echo "File not found"
+          
       - name: Test Pushover
         run: |
           curl -s \
@@ -58,10 +65,3 @@ jobs:
             git commit -m "Update fuel history"
             git push
           fi
-
-      - name: Debug file output
-        run: |
-          echo "Listing files:"
-          ls -l
-          echo "fuel_history.json content:"
-          cat fuel_history.json || echo "File not found"
