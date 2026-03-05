@@ -133,7 +133,7 @@ def main():
         "Connection": "keep-alive"
     }
 
-    response = requests.get(API_URL, headers=headers)
+    response = requests.get(API_URL)
 
     try:
         data = response.json()
