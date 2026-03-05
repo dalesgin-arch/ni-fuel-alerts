@@ -100,7 +100,7 @@ def find_cheapest(stations, fuel_type):
                     "distance": round(dist, 1)
                 }
 
-        return cheapest
+    return cheapest
 
 def send_pushover(message, token, user):
     requests.post(
