@@ -1,3 +1,4 @@
+import traceback
 import requests
 import math
 import json
@@ -172,6 +173,9 @@ def main():
             os.getenv("PUSHOVER_USER_KEY")
         )
 
-
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print("ERROR:", e)
+        traceback.print_exc()
