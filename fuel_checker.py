@@ -14,6 +14,10 @@ API_URL = (
     "resource_id=c9f1b8f4-7f6c-4b8d-9c3a-5c6b8d2f4e3a&limit=5000"
 )
 
+# Train StationBoard API
+TRAIN_URL = "https://api.translink.co.uk/NIrail/StationBoard?station=Carrickfergus"
+
+
 def haversine(lat1, lon1, lat2, lon2):
     R = 3958.8  # miles
     dlat = math.radians(lat2 - lat1)
@@ -22,15 +26,18 @@ def haversine(lat1, lon1, lat2, lon2):
         math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
     return 2 * R * math.asin(math.sqrt(a))
 
+
 def load_history():
     if not os.path.exists("fuel_history.json"):
         return {}
     with open("fuel_history.json", "r") as f:
         return json.load(f)
 
+
 def save_history(history):
     with open("fuel_history.json", "w") as f:
         json.dump(history, f, indent=2)
+
 
 def get_arrow(old, new):
     if new < old:
@@ -39,6 +46,7 @@ def get_arrow(old, new):
         return "⬆️"
     else:
         return "➡️"
+
 
 def format_station(station):
     brand = station.get("brand", "")
@@ -51,6 +59,7 @@ def format_station(station):
     else:
         return f"{name}, {address}, {postcode}".strip(", ")
 
+
 def trim_station(station, fuel, distance):
     return {
         "brand": station.get("brand"),
@@ -62,6 +71,7 @@ def trim_station(station, fuel, distance):
         "lon": station.get("longitude"),
     }
 
+
 def should_ignore_station(station):
     brand = station.get("brand", "").lower()
     postcode = station.get("postcode", "").upper()
@@ -70,6 +80,7 @@ def should_ignore_station(station):
         return True
 
     return False
+
 
 def find_cheapest(stations, fuel_type):
     cheapest = None
@@ -100,6 +111,7 @@ def find_cheapest(stations, fuel_type):
 
     return cheapest
 
+
 def send_pushover(message, token, user):
     requests.post(
         "https://api.pushover.net/1/messages.json",
@@ -107,10 +119,38 @@ def send_pushover(message, token, user):
             "token": token,
             "user": user,
             "message": message,
-            "title": "Fuel Price Alert",
+            "title": "Fuel & Train Update",
             "priority": 0
         }
     )
+
+
+def get_train_data():
+    try:
+        data = requests.get(TRAIN_URL).json()
+    except Exception:
+        return "Train data unavailable."
+
+    out = ["Trains from Carrickfergus:\n"]
+
+    # Departures
+    out.append("Departures:")
+    for d in data.get("departures", []):
+        out.append(
+            f"{d['time']} → {d['destination']} | "
+            f"Platform {d.get('platform', '—')} | {d['status']}"
+        )
+
+    # Arrivals
+    out.append("\nArrivals:")
+    for a in data.get("arrivals", []):
+        out.append(
+            f"{a['time']} ← {a['origin']} | "
+            f"Platform {a.get('platform', '—')} | {a['status']}"
+        )
+
+    return "\n".join(out)
+
 
 def main():
     history = load_history()
@@ -153,7 +193,11 @@ def main():
     save_history(history)
 
     if not alerts:
-        alerts.append("No price changes today.")
+        alerts.append("No fuel price changes today.")
+
+    # Add train data
+    train_section = get_train_data()
+    alerts.append(train_section)
 
     message = "\n\n".join(alerts)
 
@@ -166,6 +210,7 @@ def main():
         os.getenv("PUSHOVER_KEY"),
         os.getenv("PUSHOVER_USER_KEY")
     )
+
 
 if __name__ == "__main__":
     try:
