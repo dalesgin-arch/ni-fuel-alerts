@@ -13,11 +13,10 @@ API_URL = "https://www.fuelprices.gov.uk/api/feeds/latest"
 def haversine(lat1, lon1, lat2, lon2):
     R = 3958.8  # miles
     dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
+    dlon = math.radians(lat2 - lon1)
     a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * \
         math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
     return 2 * R * math.asin(math.sqrt(a))
-
 
 def load_history():
     if not os.path.exists("fuel_history.json"):
@@ -25,11 +24,9 @@ def load_history():
     with open("fuel_history.json", "r") as f:
         return json.load(f)
 
-
 def save_history(history):
     with open("fuel_history.json", "w") as f:
         json.dump(history, f, indent=2)
-
 
 def get_arrow(old, new):
     if new < old:
@@ -39,57 +36,54 @@ def get_arrow(old, new):
     else:
         return "➡️"
 
-
-def trim_station(station, fuel, distance):
-    return {
-        "brand": station.get("brand"),
-        "name": station.get("name"),
-        "postcode": station.get("postcode"),
-        "distance_miles": distance,
-        "price": station.get("prices", {}).get(fuel),
-        "lat": station.get("location", {}).get("latitude"),
-        "lon": station.get("location", {}).get("longitude"),
-    }
-
-
-def format_station(station):
-    brand = station.get("brand", "")
-    name = station.get("name", "Unknown station")
-    address = station.get("address", "")
-    postcode = station.get("postcode", "")
+def format_station(item):
+    st = item["station"]
+    brand = st.get("brand", "")
+    name = st.get("name", "Unknown station")
+    postcode = st.get("postcode", "")
+    address = st.get("address", "")
 
     if brand:
         return f"{brand} {name}, {address}, {postcode}".strip(", ")
     else:
         return f"{name}, {address}, {postcode}".strip(", ")
 
+def trim_station(item, fuel, distance):
+    st = item["station"]
+    return {
+        "brand": st.get("brand"),
+        "name": st.get("name"),
+        "postcode": st.get("postcode"),
+        "distance_miles": distance,
+        "price": next((p["amount"] for p in item["prices"] if p["fuelType"] == fuel), None),
+        "lat": st["location"]["lat"],
+        "lon": st["location"]["lon"],
+    }
 
-def should_ignore_station(station):
-    brand = station.get("brand", "").lower()
-    postcode = station.get("postcode", "").upper()
+def should_ignore_station(item):
+    st = item["station"]
+    brand = st.get("brand", "").lower()
+    postcode = st.get("postcode", "").upper()
 
     if "sainsbury" in brand and postcode.startswith("BT38"):
         return True
 
     return False
 
-
 def find_cheapest(stations, fuel_type):
     cheapest = None
 
-    for s in stations:
-        if should_ignore_station(s):
+    for item in stations:
+        if should_ignore_station(item):
             continue
 
-        prices = s.get("prices", {})
-        if fuel_type not in prices:
-            continue
+        price = next((p["amount"] for p in item["prices"] if p["fuelType"] == fuel_type), None)
+        if price is None:
+            continue  # No price for this fuel
 
-        price = prices[fuel_type]
-
-        loc = s.get("location", {})
-        lat = loc.get("latitude")
-        lon = loc.get("longitude")
+        st = item["station"]
+        lat = st["location"]["lat"]
+        lon = st["location"]["lon"]
 
         if lat is None or lon is None:
             continue
@@ -100,12 +94,11 @@ def find_cheapest(stations, fuel_type):
             if cheapest is None or price < cheapest["price"]:
                 cheapest = {
                     "price": price,
-                    "station": s,
+                    "station": item,
                     "distance": round(dist, 1)
                 }
 
     return cheapest
-
 
 def send_pushover(message, token, user):
     requests.post(
@@ -119,19 +112,8 @@ def send_pushover(message, token, user):
         }
     )
 
-
 def main():
     history = load_history()
-
-    # FULL browser headers (required to avoid 403)
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "en-GB,en;q=0.9",
-        "Referer": "https://www.fuel-finder.service.gov.uk/",
-        "Origin": "https://www.fuel-finder.service.gov.uk",
-        "Connection": "keep-alive"
-    }
 
     response = requests.get(API_URL)
 
@@ -144,9 +126,9 @@ def main():
         print("Body:", response.text[:500])
         raise SystemExit(1)
 
-    stations = data.get("stations", [])
+    stations = data.get("items", [])
 
-    fuels = ["diesel", "petrol", "super"]
+    fuels = ["diesel", "unleaded", "super unleaded"]
     alerts = []
 
     for fuel in fuels:
@@ -155,16 +137,15 @@ def main():
             continue
 
         new_price = cheapest["price"]
-        station = cheapest["station"]
+        item = cheapest["station"]
         distance = cheapest["distance"]
-        station_text = format_station(station)
-
+        station_text = format_station(item)
         old_price = history.get(fuel, new_price)
         arrow = get_arrow(old_price, new_price)
 
-        trimmed = trim_station(station, fuel, distance)
+        trimmed = trim_station(item, fuel, distance)
         alerts.append(
-            f"{fuel.capitalize()}: {new_price:.1f}p at {station_text} ({distance} miles)\n"
+            f"{fuel.capitalize()}: {new_price:.1f}p {arrow} at {station_text} ({distance} miles)\n"
             f"{json.dumps(trimmed, indent=2)}"
         )
 
@@ -172,14 +153,21 @@ def main():
 
     save_history(history)
 
+    # FIXED: message must ALWAYS be defined
     if not alerts:
         alerts.append("No price changes today.")
 
     message = "\n\n".join(alerts)
-    print("DEBUG TOKEN:", os.getenv("PUSHOVER_KEY"))
-    print("DEBUG USER:", os.getenv("PUSHOVER_USER_KEY")
-    )
 
+    print("DEBUG TOKEN:", os.getenv("PUSHOVER_KEY"))
+    print("DEBUG USER:", os.getenv("PUSHOVER_USER_KEY"))
+    print("DEBUG ALERTS:", alerts)
+
+    send_pushover(
+        message,
+        os.getenv("PUSHOVER_KEY"),
+        os.getenv("PUSHOVER_USER_KEY")
+    )
 
 if __name__ == "__main__":
     try:
