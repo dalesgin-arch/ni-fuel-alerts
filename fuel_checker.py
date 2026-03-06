@@ -8,12 +8,16 @@ import os
 HOME_LAT = 54.715
 HOME_LON = -5.805
 
-API_URL = "https://www.fuel-finder.service.gov.uk/api/feeds/latest"
+# NI Open Data API (Fuel Price Checker dataset)
+API_URL = (
+    "https://www.opendatani.gov.uk/api/3/action/datastore_search?"
+    "resource_id=c9f1b8f4-7f6c-4b8d-9c3a-5c6b8d2f4e3a&limit=5000"
+)
 
 def haversine(lat1, lon1, lat2, lon2):
     R = 3958.8  # miles
     dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lat2 - lon1)
+    dlon = math.radians(lon2 - lon1)
     a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * \
         math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
     return 2 * R * math.asin(math.sqrt(a))
@@ -38,7 +42,7 @@ def get_arrow(old, new):
 
 def format_station(station):
     brand = station.get("brand", "")
-    name = station.get("name", "Unknown station")
+    name = station.get("station_name", "Unknown station")
     address = station.get("address", "")
     postcode = station.get("postcode", "")
 
@@ -50,12 +54,12 @@ def format_station(station):
 def trim_station(station, fuel, distance):
     return {
         "brand": station.get("brand"),
-        "name": station.get("name"),
+        "name": station.get("station_name"),
         "postcode": station.get("postcode"),
         "distance_miles": distance,
-        "price": station.get("prices", {}).get(fuel),
-        "lat": station.get("location", {}).get("latitude"),
-        "lon": station.get("location", {}).get("longitude"),
+        "price": station.get(fuel),
+        "lat": station.get("latitude"),
+        "lon": station.get("longitude"),
     }
 
 def should_ignore_station(station):
@@ -74,15 +78,12 @@ def find_cheapest(stations, fuel_type):
         if should_ignore_station(s):
             continue
 
-        prices = s.get("prices", {})
-        if fuel_type not in prices:
+        price = s.get(fuel_type)
+        if price is None:
             continue
 
-        price = prices[fuel_type]
-
-        loc = s.get("location", {})
-        lat = loc.get("latitude")
-        lon = loc.get("longitude")
+        lat = s.get("latitude")
+        lon = s.get("longitude")
 
         if lat is None or lon is None:
             continue
@@ -114,15 +115,7 @@ def send_pushover(message, token, user):
 def main():
     history = load_history()
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "application/json,text/html,*/*",
-        "Accept-Language": "en-GB,en;q=0.9",
-        "Referer": "https://www.fuel-finder.service.gov.uk/",
-    }
-
-    response = requests.get(API_URL, headers=headers)
-
+    response = requests.get(API_URL)
     try:
         data = response.json()
     except ValueError:
@@ -132,9 +125,9 @@ def main():
         print("Body:", response.text[:500])
         raise SystemExit(1)
 
-    stations = data.get("stations", [])
+    stations = data["result"]["records"]
 
-    fuels = ["diesel", "petrol", "super"]
+    fuels = ["diesel", "unleaded", "super"]
     alerts = []
 
     for fuel in fuels:
